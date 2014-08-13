@@ -69,15 +69,20 @@ class QmlClass(object):
         base_string = ""
         parts = self.base_name.split(".")
         if len(parts) == 2 and parts[0] in self.imports:
-            base_string = self.imports[parts[0]].replace(".","::")
-            base_string += "::"
+            base_string = self.imports[parts[0]]
+            base_string += "."
             base_string += parts[1]
         else:
             base_string = parts[0]
 
 
         lst.extend([str(x) for x in self.header_comments])
-        lst.append("class %s : public %s {" % (name[-1], base_string))
+
+        # explicitly document inheritance as doxygen can't resolve ::'s in namespaces
+        # and we can't link to the tag files if we replace
+        lst.append("/** @inherit %s */" % base_string)
+
+        lst.append("class %s : public %s {" % (name[-1], base_string.replace(".","::")))
         lst.append("public:")
         lst.extend([str(x) for x in self.elements])
         lst.append("};")
